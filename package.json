@@ -2,7 +2,7 @@
   "name": "Conventional Commits in Pull Requests",
   "version": "1.0.0",
   "description": "A GitHub Action that verifies JIRA task in PR comments.",
-  "main": "src/index.js",
+  "main": "index.js",
   "scripts": {
     "test": "jest"
   },
