@@ -2,7 +2,24 @@ const { getInput, setFailed } = require('@actions/core');
 const { getOctokit, context } = require('@actions/github');
 const parser = require('conventional-commits-parser')
 
+
+/**
+ * Main function to run the whole process.
+ */
 async function run() {
+    const commitDetail = await checkConventionalCommits();
+    await checkTicketNumber(commitDetail);
+    const pr = context.payload.pull_request;
+    await applyLabel(pr, commitDetail);
+}
+
+
+/**
+ * Check the conventional commits of the task.
+ * Parse the title of the pull request and validate against the task type list.
+ * @returns {Promise<Object>} An object with details of the commit: type, scope and whether it's a breaking change.
+ */
+async function checkConventionalCommits() {
     let taskTypesInput = getInput('task_types');
     if (!taskTypesInput) {
         setFailed('Missing required input: task_types');
@@ -27,19 +44,29 @@ async function run() {
         setFailed(`Invalid or missing task type: '${cc.type}'. Must be one of: ${taskTypeList.join(', ')}`);
         return;
     }
+    return cc;
+}
 
+/**
+ * Check the ticket number based on the scope of the commit and a provided regex.
+ * @param {Object} cc The object with details of the commit.
+ */
+async function checkTicketNumber(cc) {
     const ticketKeyRegex = getInput('ticket_key_regex');
     if (ticketKeyRegex) {
         const taskNumberRegex = new RegExp(ticketKeyRegex);
         if (!cc.scope || !taskNumberRegex.test(cc.scope)) {
             setFailed(`Invalid or missing task number: '${cc.scope}'. Must match: ${ticketKeyRegex}`);
-            return;
         }
     }
-    await updateLabels(pr, cc);
 }
 
-async function updateLabels(pr, cc) {
+/**
+ * Apply labels to the pull request based on the details of the commit and any custom labels provided.
+ * @param {Object} pr The pull request object.
+ * @param {Object} commitDetail The object with details of the commit.
+ */
+async function applyLabel(pr, commitDetail) {
     const addLabel = getInput('add_label');
     if (addLabel !== undefined && addLabel.toLowerCase() === 'false') {
         console.log('Skipping label addition as add_label is set to false.');
@@ -60,6 +87,13 @@ async function updateLabels(pr, cc) {
             return;
         }
     }
+    await updateLabels(pr, commitDetail, customLabels);
+}
+
+/**
+ * Update labels on the pull request.
+ */
+async function updateLabels(pr, cc, customLabels) {
     const token = getInput('token');
     const octokit = getOctokit(token);
     const currentLabels = await octokit.rest.issues.listLabelsOnIssue({
@@ -123,6 +157,9 @@ async function updateLabels(pr, cc) {
     }
 }
 
+/**
+ * Generates a color based on the string input.
+ */
 function generateColor(str) {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {

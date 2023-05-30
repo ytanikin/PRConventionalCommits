@@ -1,10 +1,16 @@
-## Conventional Commit In Pull Requests GitHub Action
+# Conventional Commit In Pull Requests GitHub Action
 
-### Overview
+## Features
+
+- Conventional Commit Validation: Checks that the PR title adheres to the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
+- Automatic Labeling: Labels the PR based on the task type mentioned in the title. Can be disabled.
+- Ticket Number Validation: Optionally checks the provided ticket number format using regular expressions.
+
+## Overview
 
 Conventional Commits is a lightweight convention on top of commit messages. It provides an easy set of rules for creating an explicit commit history, which makes it easier to write automated tools on top of. This convention dovetails with SemVer, by describing the features, fixes, and breaking changes made in commit messages.
 
-This GitHub Action checks that the PR title adheres to the Conventional Commits specification. If the PR title contains a valid task type and optionally a task number, it labels the PR based on the task type.
+This GitHub Action checks that the PR title adheres to the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification. If the PR title contains a valid task type and optionally a task number, it labels the PR based on the task type.
 
 ### Why Conventional Commits?
 
@@ -29,7 +35,70 @@ By default, this action adds labels based on the task type. For example, a pull 
 If you prefer not to add labels, you can disable the labeling functionality by setting the `add_label` input to `'false'`. In such cases, the action will still validate the PR title against the Conventional Commits specification but will not add any labels.
 ![img.png](pull_requests.png)
 
-### Example Usage
+### Configuring Squash Merging
+
+When merging pull requests, you can configure the merge behavior, including the option for squashing. Please follow these steps:
+
+Go to your repository's Settings tab.
+Select the Options menu on the left sidebar.
+Under the Merge button section, you will find the merge options.
+To enable squash merging, select the checkbox for Allow squash merging.
+Make sure that at least one merge option is enabled (merge commits, squashing, or rebasing).
+
+When using the squash merge option, all commits from the head branch will be combined into a single commit in the base branch. The default commit message presented when merging a pull request with squash will include the PR title.
+## Examples
+
+## Basic Usage, no label, no ticket numbers validation
+
+This configuration checks for conventional commits using the specified `task_types` but doesn't add any labels or validate ticket numbers.
+
+Add a step that uses this action in your workflow file:
+
+```yaml
+- name: Conventional Commit Check
+  uses:  ytanikin/PRConventionalCommits@v1.0.0
+  with:
+    task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
+    add_label: 'false'
+```
+
+For this configuration, the following PR title is valid: `feat: add new feature`
+
+### Usage, with ticket numbers validation, no labeling
+
+This configuration checks for conventional commits using the specified `task_types` and validates ticket numbers, but doesn't add any labels.
+
+Add a step that uses this action in your workflow file:
+
+```yaml
+- name: Conventional Commit Check
+  uses:  ytanikin/PRConventionalCommits@v1.0.0
+  with:
+    task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
+    add_label: 'false'
+    ticket_key_regex: '^PROJECT-\\d{2,5}$'
+```
+
+For this configuration, the following PR title is valid: `feat: PROJECT-12345 add new feature`
+
+## Usage with labeling, where label is just a task type
+
+This configuration checks for conventional commits using the specified `task_types` and adds labels according to the task type.
+
+Add a step that uses this action in your workflow file:
+
+```yaml
+- name: Conventional Commit Check
+  uses:  ytanikin/PRConventionalCommits@v1.0.0
+  with:
+    task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
+```
+
+For this configuration, the following PR title is valid: `feat: add new feature`. **The PR will be labeled as** `feat`.
+
+## Example Usage with ticket number validation and custom labeling
+
+This configuration checks for conventional commits are using the specified `task_types`, validates ticket numbers, and adds custom labels.
 
 Add a step that uses this action in your workflow file:
 
@@ -39,9 +108,11 @@ Add a step that uses this action in your workflow file:
   with:
     task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
     ticket_key_regex: '^PROJECT-\\d{2,5}$'
-    add_label: 'true'
     custom_labels: '{"feat": "feature", "fix": "fix", "docs": "documentation", "test": "test", "ci": "CI/CD", "refactor": "refactor", "perf": "performance", "chore": "chore", "revert": "revert", "wip": "WIP"}'
 ```
+
+For this configuration, the following PR title is valid: `feat: PROJECT-12345 add new feature`.
+**The PR will be labeled as `feature`.**
 
 ### Troubleshooting
 
@@ -49,3 +120,15 @@ Add a step that uses this action in your workflow file:
 
 - If you need to use a different GitHub token instead of the default `GITHUB_TOKEN`, you can provide your own token as the `token` input to the action.
 
+
+
+## Author
+
+👤 **YTanikin**
+
+- Website: https://medium.com/@ytanikin
+- Github: [@ytanikin](https://github.com/ytanikin)
+
+## 🤝 Contributing
+
+Contributions, issues and feature requests are welcome!<br />Feel free to check [issues page](https://github.com/ytanikin/PRConventionalCommits/issues).
