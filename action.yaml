@@ -1,15 +1,24 @@
 name: 'Conventional Commit In Pull Requests'
-description: 'Check that the PR title contains a valid task type and (optionally) a JIRA issue key, and label the PR based on the task type'
+description: 'Check that the PR title contains a valid task type and (optionally) a task number, and label the PR based on the task type'
 inputs:
-  token:
-    description: 'GitHub token for applying labels'
-    required: true
+
   task_types:
-    description: 'List of valid task types, separated by "|". For example: "feat|fix|docs|test|ci|refactor|perf|chore|revert"'
+    description: 'An array of task types. Example: ["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
     required: true
-  jira_key_regex:
-    description: 'Regular expression to match JIRA issue key in PR title'
+  ticket_key_regex:
+    description: 'Regular expression to match issue number in PR title, by default does not validate. Example ^PROJECT-\d{2,5}$'
+    required: false
+  add_label:
+    description: 'Whether to add labels'
+    required: false
+    default: 'true'
+  token:
+    description: 'GitHub token for applying labels.'
+    required: false
+    default: ${{ github.token }}
+  custom_labels:
+    description: 'A JSON string mapping task types to custom label names. Example: {"feat": "feature", "fix": "fix", "docs": "documentation", "test": "test", "ci": "CI/CD", "refactor": "refactor", "perf": "performance", "chore": "chore", "revert": "revert", "wip": "WIP"}'
     required: false
 runs:
-  using: 'node12'
-  main: 'index.js'
+  using: 'node16'
+  main: 'dist/index.js'
