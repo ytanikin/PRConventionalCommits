@@ -48,19 +48,19 @@ async function checkConventionalCommits() {
 }
 
 /**
- * Check the ticket number based on the scope of the commit and a provided regex.
- * @param {Object} cc The object with details of the commit.
+ * Check the ticket number based on the PR title and a provided regex.
  */
-async function checkTicketNumber(cc) {
+async function checkTicketNumber() {
     const ticketKeyRegex = getInput('ticket_key_regex');
     if (ticketKeyRegex) {
-        const taskNumberRegex = new RegExp(ticketKeyRegex);
-        if (!cc.scope || !taskNumberRegex.test(cc.scope)) {
-            setFailed(`Invalid or missing task number: '${cc.scope}'. Must match: ${ticketKeyRegex}`);
+        const pr = context.payload.pull_request;
+        const taskNumberMatch = pr.title.match(new RegExp(ticketKeyRegex));
+        const taskNumber = taskNumberMatch ? taskNumberMatch[0] : '';
+        if (!taskNumber) {
+            setFailed(`Invalid or missing task number: '${taskNumber}'. Must match: ${ticketKeyRegex}`);
         }
     }
 }
-
 /**
  * Apply labels to the pull request based on the details of the commit and any custom labels provided.
  * @param {Object} pr The pull request object.

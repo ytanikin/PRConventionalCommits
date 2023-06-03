@@ -48,18 +48,28 @@ Make sure that at least one merge option is enabled (merge commits, squashing, o
 When using the squash merge option, all commits from the head branch will be combined into a single commit in the base branch. The default commit message presented when merging a pull request with squash will include the PR title.
 ## Examples
 
-## Basic Usage, no label, no ticket numbers validation
+### Basic Usage, no label, no ticket numbers validation
 
 This configuration checks for conventional commits using the specified `task_types` but doesn't add any labels or validate ticket numbers.
 
 Add a step that uses this action in your workflow file:
 
 ```yaml
-- name: Conventional Commit Check
-  uses:  ytanikin/PRConventionalCommits@v1.0.0
-  with:
-    task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
-    add_label: 'false'
+name: PR Conventional Commit Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Conventional Commit Validation
+        uses:  ytanikin/PRConventionalCommits@v1.0.0
+        with:
+          task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
+          add_label: 'false'
 ```
 
 For this configuration, the following PR title is valid: `feat: add new feature`
@@ -71,12 +81,22 @@ This configuration checks for conventional commits using the specified `task_typ
 Add a step that uses this action in your workflow file:
 
 ```yaml
-- name: Conventional Commit Check
-  uses:  ytanikin/PRConventionalCommits@v1.0.0
-  with:
-    task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
-    add_label: 'false'
-    ticket_key_regex: '^PROJECT-\\d{2,5}$'
+name: PR Conventional Commit Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Conventional Commit Validation
+        uses:  ytanikin/PRConventionalCommits@v1.0.0
+        with:
+         task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
+         add_label: 'false'
+         ticket_key_regex: 'PROJECT-\d{2,5}'
 ```
 
 For this configuration, the following PR title is valid: `feat: PROJECT-12345 add new feature`
@@ -88,10 +108,20 @@ This configuration checks for conventional commits using the specified `task_typ
 Add a step that uses this action in your workflow file:
 
 ```yaml
-- name: Conventional Commit Check
-  uses:  ytanikin/PRConventionalCommits@v1.0.0
-  with:
-    task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
+name: PR Conventional Commit Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Conventional Commit Validation
+        uses:  ytanikin/PRConventionalCommits@v1.0.0
+        with:
+          task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
 ```
 
 For this configuration, the following PR title is valid: `feat: add new feature`. **The PR will be labeled as** `feat`.
@@ -103,12 +133,22 @@ This configuration checks for conventional commits are using the specified `task
 Add a step that uses this action in your workflow file:
 
 ```yaml
-- name: Conventional Commit Check
-  uses:  ytanikin/PRConventionalCommits@v1.0.0
-  with:
-    task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
-    ticket_key_regex: '^PROJECT-\\d{2,5}$'
-    custom_labels: '{"feat": "feature", "fix": "fix", "docs": "documentation", "test": "test", "ci": "CI/CD", "refactor": "refactor", "perf": "performance", "chore": "chore", "revert": "revert", "wip": "WIP"}'
+name: PR Conventional Commit Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Conventional Commit Validation
+        uses:  ytanikin/PRConventionalCommits@v1.0.0
+        with:
+         task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
+         ticket_key_regex: '^PROJECT-\\d{2,5}$'
+         custom_labels: '{"feat": "feature", "fix": "fix", "docs": "documentation", "test": "test", "ci": "CI/CD", "refactor": "refactor", "perf": "performance", "chore": "chore", "revert": "revert", "wip": "WIP"}'
 ```
 
 For this configuration, the following PR title is valid: `feat: PROJECT-12345 add new feature`.
