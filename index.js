@@ -176,3 +176,12 @@ function generateColor(str) {
 }
 
 run().catch(err => setFailed(err.message));
+
+module.exports = {
+    run,
+    checkConventionalCommits,
+    checkTicketNumber,
+    applyLabel,
+    updateLabels,
+    generateColor
+};

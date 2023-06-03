@@ -10,6 +10,9 @@
     "@vercel/ncc": "^0.36.1",
     "conventional-commits-parser": "^3.2.4"
   },
+  "devDependencies": {
+    "jest": "^27.0.6"
+  },
   "scripts": {
     "lint": "eslint .",
     "installNcc": "npm install @vercel/ncc",

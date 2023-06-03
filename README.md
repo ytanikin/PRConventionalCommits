@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: PR Conventional Commit Validation
-        uses:  ytanikin/PRConventionalCommits@v1.0.0
+        uses:  ytanikin/PRConventionalCommits@v1.1.0
         with:
           task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
           add_label: 'false'
@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: PR Conventional Commit Validation
-        uses:  ytanikin/PRConventionalCommits@v1.0.0
+        uses:  ytanikin/PRConventionalCommits@v1.1.0
         with:
          task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
          add_label: 'false'
@@ -119,7 +119,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: PR Conventional Commit Validation
-        uses:  ytanikin/PRConventionalCommits@v1.0.0
+        uses:  ytanikin/PRConventionalCommits@v1.1.0
         with:
           task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
 ```
@@ -144,7 +144,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: PR Conventional Commit Validation
-        uses:  ytanikin/PRConventionalCommits@v1.0.0
+        uses:  ytanikin/PRConventionalCommits@v1.1.0
         with:
          task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
          ticket_key_regex: '^PROJECT-\\d{2,5}$'
