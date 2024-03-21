@@ -96,48 +96,51 @@ async function applyLabel(pr, commitDetail) {
 async function updateLabels(pr, cc, customLabels) {
     const token = getInput('token');
     const octokit = getOctokit(token);
-    const currentLabels = await octokit.rest.issues.listLabelsOnIssue({
+    const currentLabelsResult = await octokit.rest.issues.listLabelsOnIssue({
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: pr.number
     });
 
-    const labelNames = currentLabels.data.map(label => label.name);
+    const currentLabels = currentLabelsResult.data.map(label => label.name);
+    let taskTypesInput = getInput('task_types');
+    let taskTypeList = JSON.parse(taskTypesInput);
+    const managedLabels = taskTypeList.concat(['breaking change']);
+    // Include customLabels keys in managedLabels, if any
+    Object.values(customLabels).forEach(label => {
+        if (!managedLabels.includes(label)) {
+            managedLabels.push(label);
+        }
+    });
     let newLabels = [customLabels[cc.type] ? customLabels[cc.type] : cc.type];
-
-    const breakingChange = 'breaking change';
-    if (cc.breaking) {
-        newLabels.push(customLabels[breakingChange] ? customLabels[breakingChange] : breakingChange);
+    const breakingChangeLabel = 'breaking change';
+    if (cc.breaking && !newLabels.includes(breakingChangeLabel)) {
+        newLabels.push(breakingChangeLabel);
     }
 
-    let needToUpdate = newLabels.some(label => !labelNames.includes(label));
+    // Determine labels to remove and remove them
+    const labelsToRemove = currentLabels.filter(label => managedLabels.includes(label) && !newLabels.includes(label));
+    for (let label of labelsToRemove) {
+        await octokit.rest.issues.removeLabel({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: pr.number,
+            name: label
+        });
+    }
 
-    if (needToUpdate) {
-        // remove all existing labels
-        for (let label of currentLabels.data) {
-            await octokit.rest.issues.removeLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                name: label.name
-            });
-        }
-
-        // ensure new labels exist with the desired color
-        for (let label of newLabels) {
-            let currentLabel;
+    // Ensure new labels exist with the desired color and add them
+    for (let label of newLabels) {
+        if (!currentLabels.includes(label)) {
             try {
-                currentLabel = await octokit.rest.issues.getLabel({
+                await octokit.rest.issues.getLabel({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     name: label
                 });
             } catch (err) {
-                currentLabel = null;
-            }
-
-            let color = generateColor(label);
-            if (!currentLabel || currentLabel.data.color === '#ffffff') {
+                // Label does not exist, create it
+                let color = generateColor(label);
                 await octokit.rest.issues.createLabel({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
@@ -145,18 +148,17 @@ async function updateLabels(pr, cc, customLabels) {
                     color: color
                 });
             }
-        }
 
-        // add new labels
-        await octokit.rest.issues.addLabels({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: pr.number,
-            labels: newLabels,
-        });
+            // Add the label to the PR
+            await octokit.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: [label],
+            });
+        }
     }
 }
-
 /**
  * Generates a color based on the string input.
  */
