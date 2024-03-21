@@ -32,13 +32,14 @@ async function checkConventionalCommits() {
         setFailed('Invalid task_types input. Expecting a JSON array.');
         return;
     }
+    const notableChange = /^([a-z0-9]+)(\(.+\))?(!)(:)(\s)(.)+$/;
 
     const pr = context.payload.pull_request;
     const titleAst = parser.sync(pr.title);
     const cc = {
         type: titleAst.type ? titleAst.type : '',
         scope: titleAst.scope ? titleAst.scope : '',
-        breaking: titleAst.notes && titleAst.notes.some(note => note.title === 'BREAKING CHANGE'),
+        breaking: titleAst.notes && titleAst.notes.some(note => note.title === 'BREAKING CHANGE') || notableChange.test(pr.title),
     };
     if (!cc.type || !taskTypeList.includes(cc.type)) {
         setFailed(`Invalid or missing task type: '${cc.type}'. Must be one of: ${taskTypeList.join(', ')}`);

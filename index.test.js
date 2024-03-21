@@ -1,5 +1,5 @@
-const { getInput, setFailed } = require('@actions/core');
-const { getOctokit, context } = require('@actions/github');
+const {getInput, setFailed} = require('@actions/core');
+const {getOctokit, context} = require('@actions/github');
 const parser = require('conventional-commits-parser');
 
 jest.mock('@actions/core');
@@ -129,3 +129,23 @@ describe('generateColor', () => {
         expect(color1).not.toEqual(color2);
     });
 });
+
+describe('breakingChanges', () => {
+    it('should detect ! after scope', async () => {
+        getInput.mockReturnValue('["feat", "fix"]')
+        context.repo = {owner: 'myOwner', repo: 'myRepo'};
+        context.payload = {
+            pull_request: {title: 'feat(ui)!: I broke it'}
+        };
+        parser.sync.mockReturnValue({type: "feat", notes: [""]})
+        const pr = {number: 123};
+        //const cc = {type: 'feat!', breaking: false};
+        const customLabels = {};
+
+        let result = await myModule.checkConventionalCommits();
+        //expect(setFailed).toHaveBeenCalledWith('Invalid task_types input. Expecting a JSON array.');
+        expect(setFailed).not.toHaveBeenCalled();
+        expect(result.breaking).toEqual(true);
+
+    });
+})
