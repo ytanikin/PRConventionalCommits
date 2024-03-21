@@ -153,12 +153,19 @@ describe('generateColor', () => {
 
 describe('breakingChanges', () => {
     it('should detect ! after scope', async () => {
-        getInput.mockReturnValue('["feat", "fix"]')
+        when(getInput).mockReturnValue('["feat", "fix"]');
         context.repo = {owner: 'myOwner', repo: 'myRepo'};
         context.payload = {
             pull_request: {title: 'feat(ui)!: I broke it'}
         };
-        parser.sync.mockReturnValue({type: "feat", notes: [""]})
+        when(toConventionalChangelogFormat).calledWith('feat(ui)!: I broke it').mockReturnValue({
+            type: "feat",
+            scope: "stuff",
+            notes: [{
+                title: "feat(stuff)!: blah",
+                text: 'blah'
+            }]
+        });
         const pr = {number: 123};
         //const cc = {type: 'feat!', breaking: false};
         const customLabels = {};
