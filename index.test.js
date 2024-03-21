@@ -1,10 +1,11 @@
 const { getInput, setFailed } = require('@actions/core');
 const { getOctokit, context } = require('@actions/github');
-const parser = require('conventional-commits-parser');
+const toConventionalChangelogFormat = require('@conventional-commits/parser').toConventionalChangelogFormat;
+const when = require('jest-when').when;
 
 jest.mock('@actions/core');
 jest.mock('@actions/github');
-jest.mock('conventional-commits-parser');
+jest.mock('@conventional-commits/parser');
 
 const myModule = require('./index');
 
@@ -22,6 +23,26 @@ afterEach(() => {
 });
 
 describe('checkConventionalCommits', () => {
+    it('should pass with matching conventional commit', async () => {
+        when(getInput).calledWith('task_types').mockReturnValue('["feat"]');
+        when(toConventionalChangelogFormat).calledWith('feat(stuff)!:blah').mockReturnValue({
+            type: "feat",
+            scope: "stuff",
+            notes: [{
+                title: "BREAKING CHANGE",
+                text: 'blah'
+
+            }]
+        });
+        context.payload = {
+            "pull_request": {
+                "title": "feat(stuff)!:blah"
+            }
+        }
+        await myModule.checkConventionalCommits();
+        expect(setFailed).not.toHaveBeenCalled()
+    })
+
     it('should fail when task_types input is missing', async () => {
         getInput.mockReturnValue('');
         await myModule.checkConventionalCommits();
