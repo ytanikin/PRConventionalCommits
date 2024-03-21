@@ -1,6 +1,6 @@
 const { getInput, setFailed } = require('@actions/core');
 const { getOctokit, context } = require('@actions/github');
-const parser = require('conventional-commits-parser')
+const { toConventionalChangelogFormat } = require('@conventional-commits/parser')
 
 
 /**
@@ -35,7 +35,7 @@ async function checkConventionalCommits() {
     const notableChange = /^([a-z0-9]+)(\(.+\))?(!)(:)(\s)(.)+$/;
 
     const pr = context.payload.pull_request;
-    const titleAst = parser.sync(pr.title);
+    const titleAst = toConventionalChangelogFormat(pr.title);
     const cc = {
         type: titleAst.type ? titleAst.type : '',
         scope: titleAst.scope ? titleAst.scope : '',
