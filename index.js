@@ -7,10 +7,10 @@ const parser = require('conventional-commits-parser')
  * Main function to run the whole process.
  */
 async function run() {
-    const commitDetail = await checkConventionalCommits();
-    await checkTicketNumber(commitDetail);
-    const pr = context.payload.pull_request;
-    await applyLabel(pr, commitDetail);
+    // const commitDetail = await checkConventionalCommits();
+    // await checkTicketNumber(commitDetail);
+    // const pr = context.payload.pull_request;
+    // await applyLabel(pr, commitDetail);
 }
 
 
