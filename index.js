@@ -87,7 +87,7 @@ async function applyLabel(pr, commitDetail) {
             return;
         }
     }
-    await updateLabels(pr, commitDetail, customLabels);
+    // await updateLabels(pr, commitDetail, customLabels);
 }
 
 /**

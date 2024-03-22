@@ -10,7 +10,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          ref: fix-missing-lables
+          ref: ${{ github.head_ref }}
       - name: RR Conventional Commit Validation
         uses: ./ # Uses an action in the root directory of the repository
         with:
