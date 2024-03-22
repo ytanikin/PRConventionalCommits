@@ -163,6 +163,7 @@ async function updateLabels(pr, cc, customLabels) {
     }
     console.log('New labels:', newLabels);
 }
+
 /**
  * Generates a color based on the string input.
  */
