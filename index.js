@@ -122,7 +122,7 @@ async function updateLabels(pr, cc, customLabels) {
     }
     console.log('New labels:', newLabels);
     // Determine labels to remove and remove them
-    const labelsToRemove = currentLabels.filter(label => managedLabels.includes(label) && !newLabels.includes(label));
+    const labelsToRemove = [];
     for (let label of labelsToRemove) {
         await octokit.rest.issues.removeLabel({
             owner: context.repo.owner,
