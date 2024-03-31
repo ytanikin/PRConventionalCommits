@@ -160,7 +160,9 @@ For this configuration, the following PR title is valid: `feat: PROJECT-12345 ad
 
 - If you need to use a different GitHub token instead of the default `GITHUB_TOKEN`, you can provide your own token as the `token` input to the action.
 
+### Contributing
 
+After updating the code, please run `npm prepare` to build the distribution files before committing.
 
 ## Author
 
