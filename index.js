@@ -69,7 +69,6 @@ async function checkTicketNumber() {
 async function applyLabel(pr, commitDetail) {
     const addLabel = getInput('add_label');
     if (addLabel !== undefined && addLabel.toLowerCase() === 'false') {
-        console.log('Skipping label addition as add_label is set to false.');
         return;
     }
     const customLabelsInput = getInput('custom_labels');
@@ -101,26 +100,21 @@ async function updateLabels(pr, cc, customLabels) {
         repo: context.repo.repo,
         issue_number: pr.number
     });
-    console.log('Current labels:', currentLabelsResult.data.map(label => label.name));
     const currentLabels = currentLabelsResult.data.map(label => label.name);
     let taskTypesInput = getInput('task_types');
-    console.log('Task types:', taskTypesInput);
     let taskTypeList = JSON.parse(taskTypesInput);
     const managedLabels = taskTypeList.concat(['breaking change']);
     // Include customLabels keys in managedLabels, if any
-    console.log('Custom labels:', customLabels)
     Object.values(customLabels).forEach(label => {
         if (!managedLabels.includes(label)) {
             managedLabels.push(label);
         }
     });
-    console.log('Managed labels:', managedLabels);
     let newLabels = [customLabels[cc.type] ? customLabels[cc.type] : cc.type];
     const breakingChangeLabel = 'breaking change';
     if (cc.breaking && !newLabels.includes(breakingChangeLabel)) {
         newLabels.push(breakingChangeLabel);
     }
-    console.log('New labels:', newLabels);
     // Determine labels to remove and remove them
     const labelsToRemove = currentLabels.filter(label => managedLabels.includes(label) && !newLabels.includes(label));
     for (let label of labelsToRemove) {
@@ -131,7 +125,6 @@ async function updateLabels(pr, cc, customLabels) {
             name: label
         });
     }
-    console.log('Current labels:', currentLabels);
     // Ensure new labels exist with the desired color and add them
     for (let label of newLabels) {
         if (!currentLabels.includes(label)) {
@@ -161,7 +154,6 @@ async function updateLabels(pr, cc, customLabels) {
             });
         }
     }
-    console.log('New labels:', newLabels);
 }
 
 /**
