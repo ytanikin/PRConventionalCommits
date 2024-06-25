@@ -1,7 +1,11 @@
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+
 const { getInput, setFailed } = require('@actions/core');
 const { getOctokit, context } = require('@actions/github');
-const parser = require('conventional-commits-parser')
+import { CommitParser } from 'conventional-commits-parser'
 
+const parser = new CommitParser();
 
 /**
  * Main function to run the whole process.
@@ -34,7 +38,7 @@ async function checkConventionalCommits() {
     }
 
     const pr = context.payload.pull_request;
-    const titleAst = parser.sync(pr.title);
+    const titleAst = parser.parse(pr.title);
     const cc = {
         type: titleAst.type ? titleAst.type : '',
         scope: titleAst.scope ? titleAst.scope : '',
@@ -176,7 +180,7 @@ function generateColor(str) {
 
 run().catch(err => setFailed(err.message));
 
-module.exports = {
+export default {
     run,
     checkConventionalCommits,
     checkTicketNumber,

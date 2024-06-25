@@ -5,22 +5,26 @@
   "main": "index.js",
   "homepage": "https://github.com/ytanikin/PRConventionalCommits.git",
   "dependencies": {
-    "@actions/core": "^1.10.0",
+    "@actions/core": "^1.10.1",
     "@actions/github": "^5.1.1",
-    "conventional-commits-parser": "^3.2.4",
-    "@vercel/ncc": "^0.36.1"
+    "@vercel/ncc": "^0.36.1",
+    "conventional-commits-parser": "^6.0.0"
   },
   "devDependencies": {
-    "jest": "^27.5.1",
+    "@jest/globals": "^29.7.0",
     "jest-when": "^3.6.0"
+  },
+  "jest": {
+    "transform": {}
   },
   "scripts": {
     "lint": "eslint .",
     "installNcc": "npm install @vercel/ncc",
     "prepare": "ncc build index.js -o dist --source-map --license LICENSE",
-    "test": "jest",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
     "all": "npm run lint && npm run prepare && npm run test"
   },
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git@personal:ytanikin/PRConventionalCommits.git"
