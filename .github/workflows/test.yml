@@ -1,4 +1,4 @@
-name: PR Conventional Commit Check - Test
+name: Test
 
 on:
   push:
