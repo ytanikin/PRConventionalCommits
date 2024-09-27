@@ -11,28 +11,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16'  # Specify the Node.js version you need
+          node-version: '16'
 
-      # Install dependencies
       - name: Install dependencies
         run: npm install
 
-      # Run linting (optional if you want to include lint step)
-      - name: Run lint
-        run: npm run lint
-
-      # Run tests
       - name: Run tests
         run: npm test
 
-      # Build the project (runs ncc and prepares the dist folder)
       - name: Build project
         run: npm run prepare
