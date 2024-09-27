@@ -34,6 +34,9 @@ async function checkConventionalCommits() {
     }
 
     const pr = context.payload.pull_request;
+    console.log("pr details")
+    console.log(pr)
+    console.log(pr.title)
     const titleAst = parser.sync(pr.title, {
         headerPattern: /^(\w*)(?:\(([\w$.\-*/ ]*)\))?(!?): (.*)$/,
         breakingHeaderPattern: /^(\w*)(?:\(([\w$.\-*/ ]*)\))?!: (.*)$/
@@ -43,6 +46,7 @@ async function checkConventionalCommits() {
         scope: titleAst.scope ? titleAst.scope : '',
         breaking: titleAst.notes && titleAst.notes.some(note => note.title === 'BREAKING CHANGE'),
     };
+    console.log("type : " + cc.type)
     if (!cc.type || !taskTypeList.includes(cc.type)) {
         setFailed(`Invalid or missing task type: '${cc.type}'. Must be one of: ${taskTypeList.join(', ')}`);
         return;

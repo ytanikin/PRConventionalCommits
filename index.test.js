@@ -23,7 +23,6 @@ afterEach(() => {
 describe('checkConventionalCommits', () => {
 
     it('should succeed when a valid task type is provided', async () => {
-        // Mock the task_types input to be a valid list of types
         getInput.mockReturnValue(JSON.stringify(['feat', 'fix']));
         context.payload = {
             pull_request: { title: 'feat(login): add new login feature' }
@@ -36,6 +35,22 @@ describe('checkConventionalCommits', () => {
             type: 'feat',
             scope: 'login',
             breaking: false
+        });
+    });
+
+    it('should succeed when a valid task type is provided and breaking change', async () => {
+        getInput.mockReturnValue(JSON.stringify(['feat', 'fix']));
+        context.payload = {
+            pull_request: { title: 'feat(login)!: add new login feature' }
+        };
+
+        const commitDetail = await myModule.checkConventionalCommits();
+
+        expect(setFailed).not.toHaveBeenCalled();
+        expect(commitDetail).toEqual({
+            type: 'feat',
+            scope: 'login',
+            breaking: true
         });
     });
 
