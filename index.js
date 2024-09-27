@@ -35,7 +35,7 @@ async function checkConventionalCommits() {
 
     const pr = context.payload.pull_request;
     const titleAst = parser.sync(pr.title, {
-        headerPattern: /^(\w*)(?:\(([\w$.\-*/ ]*)\))?!?: (.*)$/,
+        headerPattern: /^(\w*)(?:\(([\w$.\-*/ ]*)\))?(!?): (.*)$/,
         breakingHeaderPattern: /^(\w*)(?:\(([\w$.\-*/ ]*)\))?!: (.*)$/
     });
     const cc = {
