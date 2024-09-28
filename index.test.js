@@ -79,6 +79,14 @@ describe('checkTicketNumber', () => {
 });
 
 describe('applyLabel', () => {
+    beforeEach(() => {
+        // Mock the context.repo object to provide owner and repo values
+        context.repo = {
+            owner: 'mockOwner',
+            repo: 'mockRepo',
+        };
+    });
+
     it('should skip label addition if add_label is set to false', async () => {
         getInput.mockReturnValue('false');
         await myModule.applyLabel({}, {});
@@ -89,6 +97,63 @@ describe('applyLabel', () => {
         getInput.mockReturnValueOnce('true').mockReturnValueOnce('invalid JSON');
         await myModule.applyLabel({}, {});
         expect(setFailed).toHaveBeenCalledWith('Invalid custom_labels input. Unable to parse JSON.');
+    });
+
+    it('should remove existing labels that are in the managed list but not in the new labels', async () => {
+        const mockOctokit = {
+            rest: {
+                issues: {
+                    listLabelsOnIssue: jest.fn().mockResolvedValue({
+                        data: [
+                            { name: 'feat' },
+                            { name: 'fix' },
+                            { name: 'breaking change' },
+                        ],
+                    }),
+                    removeLabel: jest.fn().mockResolvedValue({}),
+                    addLabels: jest.fn().mockResolvedValue({}),
+                },
+            },
+        };
+        getInput.mockImplementation((inputName) => {
+            if (inputName === 'task_types') {
+                return JSON.stringify(['feat', 'fix']);
+            }
+            if (inputName === 'token') {
+                return 'token';
+            }
+            return undefined;
+        });
+
+        getOctokit.mockReturnValue(mockOctokit);
+        const pr = {
+            number: 123,
+        };
+        const commitDetail = {
+            type: 'fix',
+            breaking: false,
+        };
+        const customLabels = {};
+
+        getInput.mockReturnValueOnce(JSON.stringify(['feat', 'fix'])); // task_types
+        getOctokit.mockReturnValue(mockOctokit);
+
+        // Directly call the updateLabels function
+        await myModule.updateLabels(pr, commitDetail, customLabels);
+
+        // Assert removeLabel was called for 'feat' and 'breaking change'
+        expect(mockOctokit.rest.issues.removeLabel).toHaveBeenCalledWith({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: pr.number,
+            name: 'feat',
+        });
+        expect(mockOctokit.rest.issues.removeLabel).toHaveBeenCalledWith({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: pr.number,
+            name: 'breaking change',
+        });
     });
 });
 
@@ -102,4 +167,5 @@ describe('generateColor', () => {
         const color2 = myModule.generateColor('test2');
         expect(color1).not.toEqual(color2);
     });
+
 });
