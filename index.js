@@ -9,7 +9,7 @@ function getScopeCustomLabels() {
     let customLabelKeys = []
     const customLabelsInput = JSON.parse(getInput(customLabelType));
     if (customLabelsInput !== undefined) {
-        customLabelKeys = Object.keys(customLabelsInput);
+        customLabelKeys = Object.values(customLabelsInput);
     }
     return customLabelKeys;
 }
