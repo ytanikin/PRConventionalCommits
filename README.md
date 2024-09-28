@@ -162,7 +162,11 @@ For this configuration, the following PR title is valid: `feat: PROJECT-12345 ad
 
 ### Contributing
 
-After updating the code, please run `npm prepare` to build the distribution files before committing.
+After modifying the code, please run:
+1. `npm test` to run test 
+2. `npm run prepare` to build the distribution files(`dist` folder with `index.js.map` file). Commit it together with the changes in `index.js` file.
+
+You can verify your changes by editing the title of your PR. The PR uses an action located in the root directory of the repository or the branch associated with your PR. 
 
 ## Author
 

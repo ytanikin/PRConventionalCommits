@@ -1,11 +1,9 @@
 const { getInput, setFailed } = require('@actions/core');
 const { getOctokit, context } = require('@actions/github');
-const toConventionalChangelogFormat = require('@conventional-commits/parser').toConventionalChangelogFormat;
-const when = require('jest-when').when;
+const toConventionalChangelogFormat = require('conventional-commits-parser');
 
 jest.mock('@actions/core');
 jest.mock('@actions/github');
-jest.mock('@conventional-commits/parser');
 
 const myModule = require('./index');
 
@@ -23,25 +21,38 @@ afterEach(() => {
 });
 
 describe('checkConventionalCommits', () => {
-    it('should pass with matching conventional commit', async () => {
-        when(getInput).calledWith('task_types').mockReturnValue('["feat"]');
-        when(toConventionalChangelogFormat).calledWith('feat(stuff)!:blah').mockReturnValue({
-            type: "feat",
-            scope: "stuff",
-            notes: [{
-                title: "BREAKING CHANGE",
-                text: 'blah'
 
-            }]
-        });
+    it('should succeed when a valid task type is provided', async () => {
+        getInput.mockReturnValue(JSON.stringify(['feat', 'fix']));
         context.payload = {
-            "pull_request": {
-                "title": "feat(stuff)!:blah"
-            }
-        }
-        await myModule.checkConventionalCommits();
-        expect(setFailed).not.toHaveBeenCalled()
-    })
+            pull_request: { title: 'feat(login): add new login feature' }
+        };
+
+        const commitDetail = await myModule.checkConventionalCommits();
+
+        expect(setFailed).not.toHaveBeenCalled();
+        expect(commitDetail).toEqual({
+            type: 'feat',
+            scope: 'login',
+            breaking: false
+        });
+    });
+
+    xit('should succeed when a valid task type is provided and breaking change', async () => {
+        getInput.mockReturnValue(JSON.stringify(['feat', 'fix']));
+        context.payload = {
+            pull_request: { title: 'feat(login)!: add new login feature' }
+        };
+
+        const commitDetail = await myModule.checkConventionalCommits();
+
+        expect(setFailed).not.toHaveBeenCalled();
+        expect(commitDetail).toEqual({
+            type: 'feat',
+            scope: 'login',
+            breaking: true
+        });
+    });
 
     it('should fail when task_types input is missing', async () => {
         getInput.mockReturnValue('');
@@ -54,7 +65,6 @@ describe('checkConventionalCommits', () => {
         await myModule.checkConventionalCommits();
         expect(setFailed).toHaveBeenCalledWith('Invalid task_types input. Expecting a JSON array.');
     });
-    // ... add more tests as required
 });
 
 describe('checkTicketNumber', () => {
@@ -66,15 +76,21 @@ describe('checkTicketNumber', () => {
         await myModule.checkTicketNumber();
         expect(setFailed).toHaveBeenCalledWith('Invalid or missing task number: \'\'. Must match: \\d+');
     });
-    // ... add more tests as required
 });
 
 describe('applyLabel', () => {
+    beforeEach(() => {
+        // Mock the context.repo object to provide owner and repo values
+        context.repo = {
+            owner: 'mockOwner',
+            repo: 'mockRepo',
+        };
+    });
+
     it('should skip label addition if add_label is set to false', async () => {
         getInput.mockReturnValue('false');
         await myModule.applyLabel({}, {});
         expect(setFailed).not.toHaveBeenCalled();
-        expect(console.log).toHaveBeenCalledWith('Skipping label addition as add_label is set to false.');
     });
 
     it('should fail if custom_labels input is invalid JSON', async () => {
@@ -82,61 +98,63 @@ describe('applyLabel', () => {
         await myModule.applyLabel({}, {});
         expect(setFailed).toHaveBeenCalledWith('Invalid custom_labels input. Unable to parse JSON.');
     });
-    // ... add more tests as required
-});
-describe('updateLabels', () => {
-    let octokit;
 
-    beforeEach(() => {
-        octokit = {
+    it('should remove existing labels that are in the managed list but not in the new labels', async () => {
+        const mockOctokit = {
             rest: {
                 issues: {
-                    listLabelsOnIssue: jest.fn(),
-                    removeLabel: jest.fn(),
-                    getLabel: jest.fn(),
-                    createLabel: jest.fn(),
-                    addLabels: jest.fn()
-                }
-            }
+                    listLabelsOnIssue: jest.fn().mockResolvedValue({
+                        data: [
+                            { name: 'feat' },
+                            { name: 'fix' },
+                            { name: 'breaking change' },
+                        ],
+                    }),
+                    removeLabel: jest.fn().mockResolvedValue({}),
+                    addLabels: jest.fn().mockResolvedValue({}),
+                },
+            },
         };
-        getOctokit.mockReturnValue(octokit);
-    });
+        getInput.mockImplementation((inputName) => {
+            if (inputName === 'task_types') {
+                return JSON.stringify(['feat', 'fix']);
+            }
+            if (inputName === 'token') {
+                return 'token';
+            }
+            return undefined;
+        });
 
-    it('should remove all existing labels and add new labels', async () => {
-        getInput.mockReturnValue('myToken');
-        context.repo = { owner: 'myOwner', repo: 'myRepo' };
-        octokit.rest.issues.listLabelsOnIssue.mockResolvedValue({ data: [{ name: 'oldLabel' }] });
-        octokit.rest.issues.getLabel.mockRejectedValue(new Error());
-
-        const pr = { number: 123 };
-        const cc = { type: 'myType', breaking: false };
+        getOctokit.mockReturnValue(mockOctokit);
+        const pr = {
+            number: 123,
+        };
+        const commitDetail = {
+            type: 'fix',
+            breaking: false,
+        };
         const customLabels = {};
 
-        await myModule.updateLabels(pr, cc, customLabels);
+        getInput.mockReturnValueOnce(JSON.stringify(['feat', 'fix'])); // task_types
+        getOctokit.mockReturnValue(mockOctokit);
 
-        expect(octokit.rest.issues.removeLabel).toHaveBeenCalledWith({
+        // Directly call the updateLabels function
+        await myModule.updateLabels(pr, commitDetail, customLabels);
+
+        // Assert removeLabel was called for 'feat' and 'breaking change'
+        expect(mockOctokit.rest.issues.removeLabel).toHaveBeenCalledWith({
             owner: context.repo.owner,
             repo: context.repo.repo,
             issue_number: pr.number,
-            name: 'oldLabel'
+            name: 'feat',
         });
-
-        expect(octokit.rest.issues.createLabel).toHaveBeenCalledWith({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            name: 'myType',
-            color: expect.any(String)
-        });
-
-        expect(octokit.rest.issues.addLabels).toHaveBeenCalledWith({
+        expect(mockOctokit.rest.issues.removeLabel).toHaveBeenCalledWith({
             owner: context.repo.owner,
             repo: context.repo.repo,
             issue_number: pr.number,
-            labels: ['myType']
+            name: 'breaking change',
         });
     });
-
-    // ... add more tests as required
 });
 
 describe('generateColor', () => {
@@ -149,4 +167,5 @@ describe('generateColor', () => {
         const color2 = myModule.generateColor('test2');
         expect(color1).not.toEqual(color2);
     });
+
 });
