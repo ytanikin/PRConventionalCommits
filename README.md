@@ -3,7 +3,7 @@
 ## Features
 
 - Conventional Commit Validation: Checks that the PR title adheres to the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
-- Automatic Labeling: Labels the PR based on the task type mentioned in the title. Can be disabled. Colors remain 
+- Automatic Labeling: Labels the PR based on the task type mentioned in the title. Can be disabled.
 - Ticket Number Validation: Optionally checks the provided ticket number format using regular expressions.
 
 ## Overview
