@@ -39,5 +39,5 @@ jobs:
             }'
           add_scope_label: 'true' # false by default
           scope_custom_labels: '{
-              "login": "@login"
+              "login": "login team"
             }'
