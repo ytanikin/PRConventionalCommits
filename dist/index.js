@@ -32,7 +32,7 @@ async function run() {
     if (addLabel !== undefined && addLabel.toLowerCase() === 'false') {
         return;
     }
-    await applyLabel(pr, commitDetail, commitDetail.scope, customLabelType, false, getScopeCustomLabels());
+    await applyLabel(pr, commitDetail, commitDetail.scope, customLabelType, commitDetail.breaking, getScopeCustomLabels());
 }
 
 
