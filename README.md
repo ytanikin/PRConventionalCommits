@@ -18,7 +18,8 @@ This GitHub Action checks that the PR title adheres to the [Conventional Commits
 - **Explicitly Communicate Nature of Changes**: Conventional commits establish a clear guideline, making it easier for people to contribute to your projects.
 - **Simple Navigation through Git History**: Conventional commits make it easy to identify the nature of changes (fix, feat, chore, etc.) when searching through the git commit history.
 - **Compatibility with Semantic Versioning (SemVer)**: Conventional Commits provides a structured format for commit messages, which aligns with SemVer and helps understand version changes without reading the code.
-- **Labeling PRs**: By labeling PRs based on the task type, it provides a visual indication of the nature of changes and helps in organizing and prioritizing PR reviews.
+- **Labeling PRs**: By labeling PRs based on the task type, it provides a visual indication of the nature of changes and helps in organizing and prioritizing PR reviews. 
+- Adding a `!` in the PR title will automatically assign the breaking change label to the PR.
 
 ### Inputs
 
@@ -30,7 +31,9 @@ This GitHub Action checks that the PR title adheres to the [Conventional Commits
 ### Labeling Pull Requests
 When a pull request title adheres to the Conventional Commits specification, this action can automatically label the pull request based on the task type. Labels provide filtering PRs by a label, a visual indication of the nature of changes, aiding in organizing and prioritizing PR reviews.
 
-By default, this action adds labels based on the task type. For example, a pull request with a task type of `ci` will be labeled as `CI/CD`. You can customize the label names by providing a `custom_labels` input.
+By default, this action adds labels based on the task type. For example, a pull request with a task type of `ci` will be labeled as `CI/CD`. You can customize the label names by providing a `custom_labels` input. 
+
+Adding a `!` in the PR title will automatically assign the breaking change label to the PR.
 
 If you prefer not to add labels, you can disable the labeling functionality by setting the `add_label` input to `'false'`. In such cases, the action will still validate the PR title against the Conventional Commits specification but will not add any labels.
 ![img.png](pull_requests.png)
@@ -43,9 +46,11 @@ Go to your repository's Settings tab.
 Select the Options menu on the left sidebar.
 Under the Merge button section, you will find the merge options.
 To enable squash merging, select the checkbox for Allow squash merging.
+Select PR title as a default message for squashed commit.
 Make sure that at least one merge option is enabled (merge commits, squashing, or rebasing).
 
-When using the squash merge option, all commits from the head branch will be combined into a single commit in the base branch. The default commit message presented when merging a pull request with squash will include the PR title.
+When using the squash merge option, all commits from the head branch will be combined into a single commit in the base branch. The default commit message presented when merging a pull request with squash will be the PR title.
+
 ## Examples
 
 ### Basic Usage, no label, no ticket numbers validation
