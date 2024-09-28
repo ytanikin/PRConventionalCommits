@@ -12,6 +12,14 @@ inputs:
     description: 'Whether to add labels'
     required: false
     default: 'true'
+  add_scope_label:
+    description: 'Whether to add labels'
+    required: false
+    default: 'false'
+  scope_custom_labels:
+    description: 'Whether to add labels'
+    required: false
+    default: '{}'
   token:
     description: 'GitHub token for applying labels.'
     required: false
