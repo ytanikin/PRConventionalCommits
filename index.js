@@ -9,7 +9,7 @@ function getScopeCustomLabels() {
     let customLabelKeys = []
     const customLabelsInput = JSON.parse(getInput(customLabelType));
     if (customLabelsInput !== undefined) {
-        customLabelKeys = Object.values(customLabelsInput);
+        customLabelKeys = Object.keys(customLabelsInput);
     }
     return customLabelKeys;
 }
@@ -26,7 +26,7 @@ async function run() {
     if (addLabel !== undefined && addLabel.toLowerCase() === 'false') {
         return;
     }
-    await applyLabel(pr, commitDetail, commitDetail.scope, customLabelType, false, getScopeCustomLabels());
+    await applyLabel(pr, commitDetail, commitDetail.scope, customLabelType, commitDetail.breaking, getScopeCustomLabels());
 }
 
 
