@@ -16,12 +16,12 @@ async function run() {
     const commitDetail = await checkConventionalCommits();
     await checkTicketNumber(commitDetail);
     const pr = context.payload.pull_request;
-    await applyLabel(pr, commitDetail, commitDetail.type, 'custom_labels', commitDetail.breaking);
+    await applyLabel(pr, commitDetail, commitDetail.type, 'custom_labels', commitDetail.breaking, JSON.parse(getInput('task_types')));
     const addLabel = getInput('add_scope_label');
     if (addLabel !== undefined && addLabel.toLowerCase() === 'false') {
         return;
     }
-    await applyLabel(pr, commitDetail, commitDetail.scope, 'scope_custom_labels', false);
+    await applyLabel(pr, commitDetail, commitDetail.scope, 'scope_custom_labels', false, []);
 }
 
 
@@ -81,8 +81,9 @@ async function checkTicketNumber() {
  * @param {Object} commitDetail The object with details of the commit.
  * @param labelName
  * @param customLabelType
+ * @param breaking
  */
-async function applyLabel(pr, commitDetail, labelName, customLabelType, breaking) {
+async function applyLabel(pr, commitDetail, labelName, customLabelType, breaking, expectedTaskTypes) {
     const addLabel = getInput('add_label');
     if (addLabel !== undefined && addLabel.toLowerCase() === 'false') {
         return;
@@ -105,13 +106,13 @@ async function applyLabel(pr, commitDetail, labelName, customLabelType, breaking
             return;
         }
     }
-    await updateLabels(pr, commitDetail, customLabels, labelName, breaking);
+    await updateLabels(pr, commitDetail, customLabels, labelName, breaking, expectedTaskTypes);
 }
 
 /**
  * Update labels on the pull request.
  */
-async function updateLabels(pr, commitDetail, customLabels, labelName, breaking) {
+async function updateLabels(pr, commitDetail, customLabels, labelName, breaking, expectedTaskTypes) {
     const token = getInput('token');
     const octokit = getOctokit(token);
     const currentLabelsResult = await octokit.rest.issues.listLabelsOnIssue({
@@ -120,9 +121,7 @@ async function updateLabels(pr, commitDetail, customLabels, labelName, breaking)
         issue_number: pr.number
     });
     const currentLabels = currentLabelsResult.data.map(label => label.name);
-    let taskTypesInput = getInput('task_types');
-    let taskTypeList = JSON.parse(taskTypesInput);
-    const managedLabels = taskTypeList.concat(['breaking change']);
+    const managedLabels = expectedTaskTypes.concat(['breaking change']);
     // Include customLabels keys in managedLabels, if any
     Object.values(customLabels).forEach(label => {
         if (!managedLabels.includes(label)) {
