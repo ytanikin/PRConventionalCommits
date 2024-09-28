@@ -3,6 +3,17 @@ const { getOctokit, context } = require('@actions/github');
 const parser = require('conventional-commits-parser')
 
 
+const customLabelType = 'scope_custom_labels';
+
+function getScopeCustomLabels() {
+    let customLabelKeys = []
+    const customLabelsInput = JSON.parse(getInput(customLabelType));
+    if (customLabelsInput !== undefined) {
+        customLabelKeys = Object.keys(customLabelsInput);
+    }
+    return customLabelKeys;
+}
+
 /**
  * Main function to run the whole process.
  */
@@ -10,7 +21,12 @@ async function run() {
     const commitDetail = await checkConventionalCommits();
     await checkTicketNumber(commitDetail);
     const pr = context.payload.pull_request;
-    await applyLabel(pr, commitDetail);
+    await applyLabel(pr, commitDetail, commitDetail.type, 'custom_labels', commitDetail.breaking, JSON.parse(getInput('task_types')));
+    const addLabel = getInput('add_scope_label');
+    if (addLabel !== undefined && addLabel.toLowerCase() === 'false') {
+        return;
+    }
+    await applyLabel(pr, commitDetail, commitDetail.scope, customLabelType, commitDetail.breaking, getScopeCustomLabels());
 }
 
 
@@ -68,13 +84,19 @@ async function checkTicketNumber() {
  * Apply labels to the pull request based on the details of the commit and any custom labels provided.
  * @param {Object} pr The pull request object.
  * @param {Object} commitDetail The object with details of the commit.
+ * @param labelName
+ * @param customLabelType
+ * @param breaking
  */
-async function applyLabel(pr, commitDetail) {
+async function applyLabel(pr, commitDetail, labelName, customLabelType, breaking, taskTypesDefinedInInput) {
     const addLabel = getInput('add_label');
     if (addLabel !== undefined && addLabel.toLowerCase() === 'false') {
         return;
     }
-    const customLabelsInput = getInput('custom_labels');
+    if (labelName === undefined) {
+        return;
+    }
+    const customLabelsInput = getInput(customLabelType);
     let customLabels = {};
     if (customLabelsInput) {
         try {
@@ -89,13 +111,13 @@ async function applyLabel(pr, commitDetail) {
             return;
         }
     }
-    await updateLabels(pr, commitDetail, customLabels);
+    await updateLabels(pr, commitDetail, customLabels, labelName, breaking, taskTypesDefinedInInput);
 }
 
 /**
  * Update labels on the pull request.
  */
-async function updateLabels(pr, cc, customLabels) {
+async function updateLabels(pr, commitDetail, customLabels, labelName, breaking, expectedTaskTypes) {
     const token = getInput('token');
     const octokit = getOctokit(token);
     const currentLabelsResult = await octokit.rest.issues.listLabelsOnIssue({
@@ -104,18 +126,16 @@ async function updateLabels(pr, cc, customLabels) {
         issue_number: pr.number
     });
     const currentLabels = currentLabelsResult.data.map(label => label.name);
-    let taskTypesInput = getInput('task_types');
-    let taskTypeList = JSON.parse(taskTypesInput);
-    const managedLabels = taskTypeList.concat(['breaking change']);
+    const managedLabels = expectedTaskTypes.concat(['breaking change']);
     // Include customLabels keys in managedLabels, if any
     Object.values(customLabels).forEach(label => {
         if (!managedLabels.includes(label)) {
             managedLabels.push(label);
         }
     });
-    let newLabels = [customLabels[cc.type] ? customLabels[cc.type] : cc.type];
+    let newLabels = [customLabels[labelName] ? customLabels[labelName] : labelName];
     const breakingChangeLabel = 'breaking change';
-    if (cc.breaking && !newLabels.includes(breakingChangeLabel)) {
+    if (breaking && !newLabels.includes(breakingChangeLabel)) {
         newLabels.push(breakingChangeLabel);
     }
     // Determine labels to remove and remove them
@@ -148,7 +168,6 @@ async function updateLabels(pr, cc, customLabels) {
                 });
             }
 
-            // Add the label to the PR
             await octokit.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
