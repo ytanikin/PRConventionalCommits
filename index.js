@@ -11,7 +11,7 @@ async function run() {
     await checkTicketNumber(commitDetail);
     const pr = context.payload.pull_request;
     await applyLabel(pr, commitDetail, commitDetail.type, 'custom_labels', commitDetail.breaking);
-    const addLabel = getInput('add_custom_label');
+    const addLabel = getInput('add_scope_label');
     if (addLabel !== undefined && addLabel.toLowerCase() === 'false') {
         return;
     }

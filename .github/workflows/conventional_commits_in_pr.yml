@@ -14,7 +14,6 @@ jobs:
       - name: RR Conventional Commit Validation
         uses: ./ # Uses an action in the root directory of the repository
         with:
-
           task_types: '[
               "feat",
               "fix",
@@ -38,7 +37,7 @@ jobs:
               "revert": "revert", 
               "wip": "WIP"
             }',
-          add_scope_label: "true",
+          add_scope_label: "true", # false by default
           scope_custom_labels: '{
               "login": "@login"
             }'
