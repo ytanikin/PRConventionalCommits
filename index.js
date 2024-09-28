@@ -3,6 +3,17 @@ const { getOctokit, context } = require('@actions/github');
 const parser = require('conventional-commits-parser')
 
 
+const customLabelType = 'scope_custom_labels';
+
+function getScopeCustomLabels() {
+    let customLabelKeys = []
+    const customLabelsInput = JSON.parse(getInput(customLabelType));
+    if (customLabelsInput !== undefined) {
+        customLabelKeys = Object.keys(customLabelsInput);
+    }
+    return customLabelKeys;
+}
+
 /**
  * Main function to run the whole process.
  */
@@ -15,7 +26,7 @@ async function run() {
     if (addLabel !== undefined && addLabel.toLowerCase() === 'false') {
         return;
     }
-    await applyLabel(pr, commitDetail, commitDetail.scope, 'scope_custom_labels', false, []);
+    await applyLabel(pr, commitDetail, commitDetail.scope, customLabelType, false, getScopeCustomLabels());
 }
 
 
@@ -77,7 +88,7 @@ async function checkTicketNumber() {
  * @param customLabelType
  * @param breaking
  */
-async function applyLabel(pr, commitDetail, labelName, customLabelType, breaking, expectedTaskTypes) {
+async function applyLabel(pr, commitDetail, labelName, customLabelType, breaking, taskTypesDefinedInInput) {
     const addLabel = getInput('add_label');
     if (addLabel !== undefined && addLabel.toLowerCase() === 'false') {
         return;
@@ -100,7 +111,7 @@ async function applyLabel(pr, commitDetail, labelName, customLabelType, breaking
             return;
         }
     }
-    await updateLabels(pr, commitDetail, customLabels, labelName, breaking, expectedTaskTypes);
+    await updateLabels(pr, commitDetail, customLabels, labelName, breaking, taskTypesDefinedInInput);
 }
 
 /**
