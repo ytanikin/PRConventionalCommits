@@ -16,7 +16,12 @@ async function run() {
     const commitDetail = await checkConventionalCommits();
     await checkTicketNumber(commitDetail);
     const pr = context.payload.pull_request;
-    await applyLabel(pr, commitDetail);
+    await applyLabel(pr, commitDetail, commitDetail.type, 'custom_labels', commitDetail.breaking);
+    const addLabel = getInput('add_custom_label');
+    if (addLabel !== undefined && addLabel.toLowerCase() === 'false') {
+        return;
+    }
+    await applyLabel(pr, commitDetail, commitDetail.scope, 'scope_custom_labels', false);
 }
 
 
@@ -74,13 +79,18 @@ async function checkTicketNumber() {
  * Apply labels to the pull request based on the details of the commit and any custom labels provided.
  * @param {Object} pr The pull request object.
  * @param {Object} commitDetail The object with details of the commit.
+ * @param labelName
+ * @param customLabelType
  */
-async function applyLabel(pr, commitDetail) {
+async function applyLabel(pr, commitDetail, labelName, customLabelType, breaking) {
     const addLabel = getInput('add_label');
     if (addLabel !== undefined && addLabel.toLowerCase() === 'false') {
         return;
     }
-    const customLabelsInput = getInput('custom_labels');
+    if (labelName === undefined) {
+        return;
+    }
+    const customLabelsInput = getInput(customLabelType);
     let customLabels = {};
     if (customLabelsInput) {
         try {
@@ -95,13 +105,13 @@ async function applyLabel(pr, commitDetail) {
             return;
         }
     }
-    await updateLabels(pr, commitDetail, customLabels);
+    await updateLabels(pr, commitDetail, customLabels, labelName, breaking);
 }
 
 /**
  * Update labels on the pull request.
  */
-async function updateLabels(pr, cc, customLabels) {
+async function updateLabels(pr, commitDetail, customLabels, labelName, breaking) {
     const token = getInput('token');
     const octokit = getOctokit(token);
     const currentLabelsResult = await octokit.rest.issues.listLabelsOnIssue({
@@ -119,9 +129,9 @@ async function updateLabels(pr, cc, customLabels) {
             managedLabels.push(label);
         }
     });
-    let newLabels = [customLabels[cc.type] ? customLabels[cc.type] : cc.type];
+    let newLabels = [customLabels[labelName] ? customLabels[labelName] : labelName];
     const breakingChangeLabel = 'breaking change';
-    if (cc.breaking && !newLabels.includes(breakingChangeLabel)) {
+    if (breaking && !newLabels.includes(breakingChangeLabel)) {
         newLabels.push(breakingChangeLabel);
     }
     // Determine labels to remove and remove them
@@ -154,7 +164,6 @@ async function updateLabels(pr, cc, customLabels) {
                 });
             }
 
-            // Add the label to the PR
             await octokit.rest.issues.addLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
