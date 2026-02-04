@@ -1,18 +1,20 @@
-const { getInput, setFailed } = require('@actions/core');
-const { getOctokit, context } = require('@actions/github');
-const toConventionalChangelogFormat = require('conventional-commits-parser');
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { getInput, setFailed } from '@actions/core';
+import { getOctokit, context } from '@actions/github';
 
-jest.mock('@actions/core');
-jest.mock('@actions/github');
+vi.mock('@actions/core');
+vi.mock('@actions/github');
 
-const myModule = require('./index');
+// Dynamic import for the module under test (after mocks are set up)
+const myModule = await import('./index.js');
 
 beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
 });
+
 let logMock;
 beforeEach(() => {
-    logMock = jest.spyOn(console, 'log');
+    logMock = vi.spyOn(console, 'log');
     logMock.mockImplementation(() => {});
 });
 
@@ -80,11 +82,11 @@ describe('checkTicketNumber', () => {
 
 describe('applyLabel', () => {
     beforeEach(() => {
-        // Mock the context.repo object to provide owner and repo values
-        context.repo = {
+        // Mock the context.repo getter to provide owner and repo values
+        vi.spyOn(context, 'repo', 'get').mockReturnValue({
             owner: 'mockOwner',
             repo: 'mockRepo',
-        };
+        });
     });
 
     it('should skip label addition if add_label is set to false', async () => {
@@ -103,15 +105,15 @@ describe('applyLabel', () => {
         const mockOctokit = {
             rest: {
                 issues: {
-                    listLabelsOnIssue: jest.fn().mockResolvedValue({
+                    listLabelsOnIssue: vi.fn().mockResolvedValue({
                         data: [
                             { name: 'feat' },
                             { name: 'fix' },
                             { name: 'breaking change' },
                         ],
                     }),
-                    removeLabel: jest.fn().mockResolvedValue({}),
-                    addLabels: jest.fn().mockResolvedValue({}),
+                    removeLabel: vi.fn().mockResolvedValue({}),
+                    addLabels: vi.fn().mockResolvedValue({}),
                 },
             },
         };

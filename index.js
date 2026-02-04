@@ -1,6 +1,6 @@
-const { getInput, setFailed } = require('@actions/core');
-const { getOctokit, context } = require('@actions/github');
-const parser = require('conventional-commits-parser')
+import { getInput, setFailed } from '@actions/core';
+import { getOctokit, context } from '@actions/github';
+import { CommitParser } from 'conventional-commits-parser';
 
 
 /**
@@ -34,10 +34,11 @@ async function checkConventionalCommits() {
     }
 
     const pr = context.payload.pull_request;
-    const titleAst = parser.sync(pr.title.trimStart(), {
+    const parser = new CommitParser({
         headerPattern: /^(\w*)(?:\(([\w$.\-*/ ]*)\))?!?: (.*)$/,
         breakingHeaderPattern: /^(\w*)(?:\(([\w$.\-*/ ]*)\))?!: (.*)$/
     });
+    const titleAst = parser.parse(pr.title.trimStart());
     const cc = {
         type: titleAst.type ? titleAst.type : '',
         scope: titleAst.scope ? titleAst.scope : '',
@@ -171,7 +172,7 @@ function generateColor(str) {
     let color = '';
     for (let i = 0; i < 3; i++) {
         let value = (hash >> (i * 8)) & 0xFF;
-        color += ('00' + value.toString(16)).substr(-2);
+        color += ('00' + value.toString(16)).slice(-2);
     }
 
     return color;
@@ -179,7 +180,7 @@ function generateColor(str) {
 
 run().catch(err => setFailed(err.message));
 
-module.exports = {
+export {
     run,
     checkConventionalCommits,
     checkTicketNumber,
